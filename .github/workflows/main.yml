@@ -1,20 +1,40 @@
+name: Deploy PantanalWeb
+
 on:
   push:
     branches:
       - main
-name: Deploy website on push
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pantanalweb-production
+  cancel-in-progress: false
+
 jobs:
   web-deploy:
-    name: Deploy
+    name: Sync HostGator
     runs-on: ubuntu-latest
-    steps:
-    - name: Get latest code
-      uses: actions/checkout@v2
 
-    - name: Sync files
-      uses: SamKirkland/FTP-Deploy-Action@4.0.0
-      with:
-        server: ${{ secrets.ftp_server }}
-        username: ${{ secrets.ftp_username }}
-        password: ${{ secrets.ftp_password }}
-        server-dir: public_html/
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.ftp_server }}
+          username: ${{ secrets.ftp_username }}
+          password: ${{ secrets.ftp_password }}
+          local-dir: ./
+          server-dir: public_html/
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/node_modules/**
+            README.md
+            .gitignore
